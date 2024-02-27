@@ -1,0 +1,27 @@
+/**
+ * TestAglomeration.java
+ * 
+ * @author Rayan Almohaize, Djibril Dahoub
+ *
+ */
+package up.mi.da.agglomeration;
+
+//import java.io.File;
+
+public class ApplicationAgglomeration {
+    public static void main(String[] args) {
+        /*if (args.length == 0) {
+            System.out.println("Veuillez fournir le chemin du fichier en argument.");
+            return;
+        }
+
+        String fichier = args[0];
+        
+        // Vérifier si le fichier existe
+        File file = new File(fichier);
+        if (!file.exists()) {
+            System.out.println("Le fichier spécifié n'a pas été trouvé : " + fichier);
+        }*/
+        MenuApplication.menu("monAgglomeratio.txt");
+	}
+}

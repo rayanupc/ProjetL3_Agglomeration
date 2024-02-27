@@ -1,0 +1,136 @@
+/**
+ * MenuApplication.java
+ * 
+ * @author Rayan Almohaize, Djibril Dahoub
+ *
+ */
+package up.mi.da.agglomeration;
+
+import java.io.File;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
+/**
+ * Menu principale du programme
+ */
+
+public class MenuApplication {
+	
+	/**
+	 * permet d'etablire le menu grace auquel l'utilisateur choisira de resoudre le problème des bornes de recharge
+	 * de son agglomération manuellement ou automatiquer et il pourra aussi sauvegarder et afficher son agglomération
+	 */
+	public static void menu(String fichier) {
+		Agglomeration agglo = ParserAgglomeration.parserAgglomeration(fichier);
+		
+		System.out.println("Les route de votre agglomération sont : \n");
+		StringBuilder sb = new StringBuilder("");
+		for(int i=0; i<agglo.getEnssembleDeVille().size(); i++) {
+			for(int j=0; j<agglo.getEnssembleDeVille().size(); j++) {
+				if(agglo.getGraphe().estRelie(i, j)==true) {
+					if(sb.toString().contains(agglo.getEnssembleDeVille().get(j).getNom()+"<->"+agglo.getEnssembleDeVille().get(i).getNom())==false) {
+						sb.append(agglo.getEnssembleDeVille().get(i).getNom()+"<->"+agglo.getEnssembleDeVille().get(j).getNom()+" ; ");
+					}
+				}
+			}
+		}
+		
+		System.out.println(sb.toString());
+		System.out.println();
+		
+		boolean isBorne = false;
+		for(Ville v : agglo.enssembleDeVille) {
+			if(v.getPossedeUneBorne()) {
+				isBorne = true;
+			}
+		}
+		if(isBorne==false) {
+			System.out.println("Aucune borne n'a été trouvée");
+			System.out.println();
+		}
+		else {
+			System.out.println(agglo.listeVilleBornes());
+			System.out.println();
+		}
+		
+		Scanner sc = new Scanner(System.in);
+		int choix = 0;
+			
+		do{
+			try {
+			System.out.println("1) résoudre manuellement");
+			System.out.println("2) résoudre automatiquement");
+			System.out.println("3) sauvegarder");
+			System.out.println("4) fin");
+			
+				choix = sc.nextInt();
+				switch(choix) {
+				case 1:
+					boolean contientAucuneZoneDeRecharge = true;
+					boolean respectAccessibilite = true;
+					for(Ville v : agglo.getEnssembleDeVille()) {
+						if(v.getPossedeUneBorne()==true) {
+							contientAucuneZoneDeRecharge=false;
+						}
+					}
+					
+					if(contientAucuneZoneDeRecharge==true) {
+						for(Ville v : agglo.getEnssembleDeVille()) {
+							v.setPossedeUneBorne(true);
+						}
+					}
+					else{
+						if(agglo.respecteConditionAccessibilite()==false) {
+							for(Ville v : agglo.getEnssembleDeVille()) {
+								v.setPossedeUneBorne(true);
+								respectAccessibilite = false;
+							}
+						}
+					}
+					if(contientAucuneZoneDeRecharge==true) {
+						System.out.println("Votre agglomération n'avait au départ aucune borne de recharge,\n "
+								+ "nous vous avons donc mis des bornes de recharges dans toutes les villes pour vous facilité la résolution");
+					}
+					if(respectAccessibilite==false) {
+						System.out.println("Votre agglomération ne réspectait pas les condition d'accessibilité aux bornes de recharge,\n "
+								+ "nous vous avons donc mis des bornes de recharges dans toutes les villes pour vous facilité la résolution");
+					}
+					System.out.println(agglo.listeVilleBornes());
+					agglo.menuPlacementDeBorneManuelle();
+					break;
+				case 2:
+					agglo.optimisationScoreAgglomeration();
+					break;
+				case 3:
+					System.out.println(" 1) Sauvegarder votre agglomération dans le fichier par défaut (sauvegardeAgglomeration.txt)");
+					System.out.println(" 2) Sauvegarder votre agglomération dans le fichier de votre choix");
+					String fichierSave;
+					int choixSave = sc.nextInt();
+					switch(choixSave) {
+					case 1:
+						fichierSave = "sauvegardeAgglomeration.txt";
+						SauvegardeAgglomeration.sauvegardeAgglomeration(agglo, fichierSave);
+						break;
+					case 2:
+						System.out.println("Entrez le chemin vers le fichier que vous voulez");
+						fichierSave = sc.next();
+						File file = new File(fichierSave);
+				        if (!file.exists()) {
+				            System.err.println("Le fichier spécifié n'a pas été trouvé : " + fichier);
+				        }
+					}
+					break;
+				case 4:
+					GrapheColoreGraphStream.grapheColore(agglo);
+					break;
+				default:
+					System.out.println("Entrez 1, 2, 3 ou 4");
+				}
+			}catch(InputMismatchException e) {
+				System.err.println("Vous devez entrer un entrer un nombre entier");
+				sc.nextLine();
+			}
+		}while(choix!=4);
+	}
+}

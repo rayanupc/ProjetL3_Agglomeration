@@ -1,0 +1,217 @@
+package up.mi.da.agglomeration;
+
+import java.util.*;
+
+import up.mi.da.exceptions.*;
+
+/*
+ * Represente une agglomeration de plusieures villes pouvant etre relié entre elles(crée manuellement)
+ */
+
+public class AgglomerationManuelle extends Agglomeration{
+
+	/**
+	 * Construit une agglomeration à partire d'une matrice de boolean entierement initialisée à false
+	 * 
+	 * @param matrice La matrice de boolean 
+	 */
+	public AgglomerationManuelle(Graphe graphe) {
+		super(graphe);
+	}	
+	
+	//TRAITEMENT MANUELLE DE L'AGGLOMERATION	
+
+	
+	/**
+	 * Permet de creer manuellement notre agglomeration : entrer nombre de ville 
+	 * et le nom des villes
+	 * 
+	 * @param sc un Scanner permettant de faire les entrées au clavier
+	 */	
+	public void creationAgglomerationMannuelle(Scanner sc) {
+		int nb_ville;
+		do {
+			System.out.println("Entrez le nombre de ville (<26): ");
+			nb_ville = sc.nextInt();
+		}while(nb_ville < 0 || nb_ville > 26);
+		
+		this.graphe.setNbVille(nb_ville);
+		
+		for(int i=0;i<nb_ville;i++) {
+			System.out.println("nommez la villes " + (i+1) + ": ");
+			String nomVille = sc.next();
+			Ville ville = new Ville(nomVille);
+			ville.setId(i);
+			enssembleDeVille.add(ville);
+			
+		}
+		
+		System.out.println("ville entrer correctement !");
+		System.out.println(afficheVille());	
+	
+		System.out.println("MENU");
+			
+	}
+	
+	/**
+	 * Permet de creer manuellement les routes de notre agglomeration : entrer les villes 
+	 * que l'ont veux relier
+	 * 
+	 * @param sc un Scanner permettant de faire les entrées au clavier
+	 */	
+	public void menuCreationDeRoute(Scanner sc) {
+		try {
+		int choix_option;
+		String villeA,villeB;
+		System.out.println("Creation de routes");
+		do {
+			System.out.println("(1) ajouter une route");
+			System.out.println("(2) fin");
+			choix_option = sc.nextInt();
+			
+			switch(choix_option) {
+			case 1:
+				int indiceA, indiceB;
+				do {
+					System.out.println("entre quel ville ajouter une route ? \n" + "(entrez simplement la chaine de carachtère correspondant a la ville choisis) ");
+					System.out.println("la ville A : ");
+					villeA = sc.next();
+					indiceA = rechercheIndiceVille(villeA);
+					
+					System.out.println("la ville B : ");
+					villeB = sc.next();
+					indiceB = rechercheIndiceVille(villeB);
+					
+					if(indiceA ==-1 || indiceB==-1) {
+						System.out.println("Les villes que vout avez entrez sont incorrectes");
+					}
+					else {
+						this.graphe.ajoutLiaison(indiceA, indiceB);
+					}
+				}while(indiceA==-1 || indiceB==-1);
+				System.out.println(graphe.toString());
+				break;
+			case 2: System.out.println("Vous avez fini de creer votree ville");
+				break;
+			default: 
+				System.out.println("Mauvaise entrez ! \n"
+						+ "Entrez les valeurs entre parenthèse pou selectionner l'action souhaiter ..");
+				break;
+			}
+		}while(choix_option !=2);
+		}catch(VilleInexistanteException e) {
+			e.getMessage();
+		}
+		
+	}
+	
+	/**
+	 * Permet de placer manuellement les bornes de racharge de notre agglomeration : 
+	 * entrer le nom des ville dans laquelle on veux les placer ou les retirer
+	 * 
+	 * @param sc un Scanner permettant de faire les entrées au clavier
+	 */	
+	public void menuPlacementDeBorne(Scanner sc) {
+		int choix_option;
+		String ville;
+		System.out.println("Placement des bornes de recharges");
+		
+		do {
+			System.out.println("(1) ajouter une zone de recharge");
+			System.out.println("(2) retirer une zone de recharge");
+			System.out.println("(3) fin");
+			choix_option = sc.nextInt();
+			
+			switch(choix_option) {
+			case 1:
+				System.out.println("Dans quelle ville voulez vous ajouter une zone de recharge ? \n" 
+			+ "(entrez simplement la chaine de carachtère correspondant a la ville choisis) ");
+				ville = sc.next();
+				boolean trouverVille = false;
+				
+				for(int i=0;i<enssembleDeVille.size();i++) {
+					if(enssembleDeVille.get(i).getNom().equals(ville)) {
+						trouverVille = true;
+						if(!(enssembleDeVille.get(i).getPossedeUneBorne())) {
+							System.out.println("La ville " + ville + " possède désormai une borne !");
+							enssembleDeVille.get(i).setPossedeUneBorne(true);
+						}else {
+							System.out.println(ville+" possède dèja une borne de recharge");
+						}
+					}
+				}
+				
+				if(!trouverVille) {
+					System.out.println(ville+" est une ville qui n'existe pas dans notre agglomeration");
+				}else {
+					System.out.println(listeVilleBornes());
+				}
+				break;
+			
+			case 2:
+				try {
+					System.out.println();
+					System.out.println("Dans quelle ville voulez vous retirer une zone de recharge ? \n" + "(entrez simplement la chaine de carachtère correspondant a la ville choisis) ");
+					ville = sc.next();
+					//trouverVille = false;
+					boolean borneVoisin = false;
+					Ville v = new Ville();
+					int i = rechercheIndiceVille(ville);
+					v = this.enssembleDeVille.get(i);
+					
+					
+					if(i == -1){
+						System.out.println(ville+" est une ville qui n'existe pas dans notre agglomeration");
+					}else if(!(v.getPossedeUneBorne())) {
+						System.out.println("la ville "+ville+" n'a pas de borne de recharcge");
+						System.out.println(listeVilleBornes());
+					}else {
+						for(int j=0; j<this.graphe.getNbVille(); j++) {
+							System.out.println("slt");
+							if(this.graphe.estRelie(i, j)) {
+								System.out.println("slt");
+								if(enssembleDeVille.get(j).getPossedeUneBorne()) {
+									borneVoisin = true;
+								}
+							}
+						}
+						
+						if(borneVoisin) {
+							this.enssembleDeVille.get(i).setPossedeUneBorne(false);
+							System.out.println("La borne à bien été retiré de la ville "+ville);
+						}else {
+							System.out.println("Vous ne pouvez pas retirer la borne de recharge de "+ville+" car ses villes voisines ne possederont pas de bornes à proximité d'elles");
+						}
+					}
+					
+					System.out.println(listeVilleBornes());
+					break;
+				}catch(VilleInexistanteException e) {
+					e.getMessage();
+				}
+			case 3:
+				System.out.println("Vous avez fini de placer vos bornes");
+				System.out.println(listeVilleBornes());
+				break;
+			default: 
+				System.out.println("Mauvaise entrez ! \n"
+						+ "Entrez les valeurs entre parenthèse pour selectionner l'action souhaiter ..");
+				break;
+			}
+			
+		}while(choix_option != 3);
+	}
+	
+	
+	/**
+	 * Application des fonctions de traitement manuelles d'une agglomeration
+	 */	
+	public void managerManuelle() {
+		Scanner sc = new Scanner(System.in);
+		/*this.creationAgglomerationMannuelle(sc);
+		this.menuCreationDeRoute(sc);*/
+		this.menuPlacementDeBorne(sc);
+		sc.close();
+	}
+	
+}

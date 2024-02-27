@@ -1,0 +1,14 @@
+/**
+ * TestAglomeration.java
+ * 
+ * @author Rayan Almohaize, Djibril Dahoub
+ *
+ */
+package up.mi.da.agglomeration;
+
+public class ApplicationAgglomeration {
+    public static void main(String[] args) {
+    	//String fichier = args[0];
+    	MenuApplication.menu("monAgglomeration.txt");
+	}
+}

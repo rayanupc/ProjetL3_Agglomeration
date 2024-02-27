@@ -1,0 +1,5 @@
+package up.mi.da.exceptions;
+
+public class FichierIncorrect {
+
+}

@@ -1,0 +1,146 @@
+package up.mi.da.allTest;
+
+import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import up.mi.da.agglomeration.*;
+import up.mi.da.exceptions.VilleInexistanteException;
+
+public class AgglomerationTest {
+	
+	private Agglomeration agglo;
+	private Graphe graphe;
+    private Ville villeA;
+    private Ville villeB;
+    private Ville villeC;
+    private Ville villeD;
+    private Ville villeE;
+	
+	@BeforeEach
+	public void beforeEach() {
+		graphe = new Graphe(5);
+		agglo = new Agglomeration(graphe);
+		
+		agglo.ajoutVille("A");
+		agglo.ajoutVille("B");
+		agglo.ajoutVille("C");
+		agglo.ajoutVille("D");
+		agglo.ajoutVille("E");
+		
+		agglo.ajoutRoute("A", "B");
+		agglo.ajoutRoute("B", "C");
+		agglo.ajoutRoute("C", "A");
+		agglo.ajoutRoute("C", "D");
+		agglo.ajoutRoute("C", "E");
+		
+        agglo.ajoutZoneDeRecharge("A");
+        agglo.ajoutZoneDeRecharge("B");
+        
+        villeA = agglo.getEnssembleDeVille().get(0);
+        villeB = agglo.getEnssembleDeVille().get(1);
+        villeC = agglo.getEnssembleDeVille().get(2);
+        villeD = agglo.getEnssembleDeVille().get(3);
+        villeE = agglo.getEnssembleDeVille().get(4);
+	}
+	
+	@ParameterizedTest
+	@CsvSource({"8, 0", "1, 10", "4, 7", "45, 45", "6, 2"})
+	public void estRelieTestException(int ville1, int ville2) {
+		assertThrows(IndexOutOfBoundsException.class, () -> {
+			agglo.getGraphe().estRelie(ville1, ville2);
+		});		
+	}
+	
+	@ParameterizedTest
+	@CsvSource({"A, 0", "B, 1", "C, 2", "D, 3", "E, 4"})
+	public void rechercheVilleTestSuccess(String nomVille, int indiceVille) {
+		assertEquals(nomVille, agglo.rechercheVille(indiceVille).getNom());
+	}
+	
+	@ParameterizedTest
+	@CsvSource({"A, 0", "B, 1", "C, 2", "D, 3", "E, 4"})
+	public void rechercheIndiceVilleTestSuccess(String nomVille, int indiceVille) {
+		assertThrows(VilleInexistanteException.class, () -> {
+			agglo.rechercheIndiceVille("T");
+		});
+		try {
+			assertEquals(indiceVille, agglo.rechercheIndiceVille(nomVille));
+		}catch(VilleInexistanteException e) {
+			e.getMessage();
+		}
+	}	
+	
+	@Test
+	public void listeVilleBorneTestSucces() {
+		for(Ville v : agglo.getEnssembleDeVille()) {
+			v.setPossedeUneBorne(true);
+		}
+		assertEquals("Les villes possedant une borne sont : A B C D E ", agglo.listeVilleBornes());
+	}
+
+	@ParameterizedTest
+	@CsvSource({"A", "B", "C", "D", "E"})
+	public void ajoutRouteSurLaMemeVilleTest(String nomVille) {
+		assertThrows(IllegalArgumentException.class, () -> {
+			agglo.ajoutRoute(nomVille, nomVille);
+		});
+	}
+	
+	@Test
+	public void villeVoisineSansBorneTestSucces() {
+        String result = agglo.villeVoisineSansBorne(villeA);
+        assertEquals("C, ", result);
+        
+        result = agglo.villeVoisineSansBorne(villeB);
+        assertEquals("C, ", result);
+        
+        result = agglo.villeVoisineSansBorne(villeC);
+        assertEquals("D, E, ", result);
+        
+        result = agglo.villeVoisineSansBorne(villeD);
+        assertEquals("C, ", result);
+        
+        result = agglo.villeVoisineSansBorne(villeE);
+        assertEquals("C, ", result);
+	}
+	
+	@Test
+	public void possedeBorneVoisineTestSucces() {
+		assertTrue(agglo.possedUneBorneVoisine(villeA));
+		assertTrue(agglo.possedUneBorneVoisine(villeB));
+		assertTrue(agglo.possedUneBorneVoisine(villeC));
+		assertFalse(agglo.possedUneBorneVoisine(villeD));
+		assertFalse(agglo.possedUneBorneVoisine(villeE));
+	}
+	
+	@Test
+	public void nbSatisfactionBorneTestSucces() {
+		assertEquals(0, agglo.nbSatisfactionDeBorne(villeA));
+		assertEquals(0, agglo.nbSatisfactionDeBorne(villeB));
+		assertEquals(3, agglo.nbSatisfactionDeBorne(villeC));
+		assertEquals(1, agglo.nbSatisfactionDeBorne(villeD));
+		assertEquals(1, agglo.nbSatisfactionDeBorne(villeE));
+	}
+	
+	@Test
+	public void respecteConditionAccessibiliteTestSuccess() {
+		assertFalse(agglo.respecteConditionAccessibilite());
+	}
+	
+	@Test
+	public void optimisationScoreAgglomerationTestSuccess() {
+		agglo.optimisationScoreAgglomeration();
+		assertEquals("Les villes possedant une borne sont : C ", agglo.listeVilleBornes());
+	}
+	
+	@Test
+	public void respecteConditionAccessibiliteApresOptimisation() {
+		agglo.optimisationScoreAgglomeration();
+		assertTrue(agglo.respecteConditionAccessibilite());
+	}
+	
+}

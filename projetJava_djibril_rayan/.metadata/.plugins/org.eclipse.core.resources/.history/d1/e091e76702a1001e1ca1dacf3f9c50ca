@@ -1,0 +1,684 @@
+/**
+ * Agglomeration.java
+ * 
+ * @author Rayan Almohaize, Djibril Dahoub
+ *
+ */
+package up.mi.da.agglomeration;
+
+import java.io.File;
+import java.util.*;
+import up.mi.da.exceptions.*;
+
+/*
+ * Represente une agglomeration de plusieures villes pouvant etre relié entre elles(crée automatiquement)
+ */
+
+public class Agglomeration {
+	
+	/*
+	 * Pour representer notre agglomeration sous forme de matrice
+	 */
+	protected Graphe graphe;
+	
+	/*
+	 * Pour stocker l'enssembles des villes de notre agglomeration
+	 */
+	protected List<Ville> enssembleDeVille;
+	
+	/**
+	 * Reprsente le nombre de borne de recharge dans l'agglomeration
+	 */
+	protected int score;
+
+	/**
+	 * Construit une agglomeration à partire d'une matrice de boolean entierement initialisée à false
+	 * 
+	 * @param matrice La matrice de boolean 
+	 */
+	public Agglomeration(Graphe graphe) {
+		this.graphe = graphe;
+		enssembleDeVille = new ArrayList<Ville>();	
+		score = 0;
+	}
+
+	public Graphe getGraphe() {
+		return graphe;
+	}
+	
+	public void setGraphe(Graphe graphe) {
+		this.graphe = graphe;
+	}
+
+	public List<Ville> getEnssembleDeVille() {
+		return enssembleDeVille;
+	}
+
+	public void setEnssembleDeVille(List<Ville> enssembleDeVille) {
+		this.enssembleDeVille = enssembleDeVille;
+	}
+	
+	public int getScore() {
+		return this.score;
+	}
+	
+	public void setScore(int score) {
+		this.score = score;
+	}
+	
+	public void incrementeScore() {
+		this.score+=1;
+	}
+	
+	public void decrementeScore() {
+		this.score-=1;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de trouver une ville à partir de son indice dans id
+	 * @param i l'id de la ville (représente aussi son indice dans la liste des villes)
+	 * @return la ville recerhée
+	 */
+	public Ville rechercheVille(int i){
+		Ville vRecherche = new Ville();
+		for(Ville v : this.enssembleDeVille) {
+			if(v.getId()==i) {
+				vRecherche.setId(v.getId());
+				vRecherche.setNom(v.getNom());
+				vRecherche.setPossedeUneBorne(v.getPossedeUneBorne());
+			}
+		}
+		return vRecherche;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de connaitre la liste des villes possèdant une borne
+	 * 
+	 * @return un String indiquant les villes possedant une borne
+	 */
+	public String listeVilleBornes() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Les villes possedant une borne sont : ");
+		
+		for(int i = 0;i<enssembleDeVille.size();i++) {
+			if(enssembleDeVille.get(i).getPossedeUneBorne()) {
+				sb.append(this.enssembleDeVille.get(i).getNom() + " ");
+			}
+		}
+		return sb.toString();
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Fonction qui recherche l'indice d'une ville dans la liste des ville d'une agglomération avec son nom 
+	 * 
+	 * @return l' indice de la ville ou -1 si la ville n'est pas dans la liste des 
+	 * villes de l'agglomeration
+	 * @throws VilleHorsAgglomerationException, VilleInexistanteException
+	 */
+	public int rechercheIndiceVille(String nom) throws VilleInexistanteException{
+		boolean existeVille = false;
+		for(Ville v : this.enssembleDeVille) {
+			if(v.getNom().equals(nom.toUpperCase())) {
+				existeVille = true;
+			}
+		}
+		if(existeVille==false) {
+			throw new VilleInexistanteException();
+		}
+		int indice = -1;
+		for(int i=0;i<enssembleDeVille.size();i++) {
+			if(enssembleDeVille.get(i).getNom().equals(nom.toUpperCase())) {
+				indice = enssembleDeVille.get(i).getId();
+			}
+		}
+		return indice;
+	}	
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'ajouter une ville dans notre liste de ville
+	 * 
+	 * @param nomVille le nom de la ville que l'ont veux ajouter
+	 */	
+	public void ajoutVille(String nomVille) {
+		Ville ville = new Ville(nomVille);
+		enssembleDeVille.add(ville);
+		ville.setId(enssembleDeVille.indexOf(ville));
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'ajouter une route entre deux villes dans notre agglomeration
+	 * 
+	 * @param ville1 le nom de la première ville
+	 * @param ville2 le nom de la deuxieme ville
+	 */	
+	public void ajoutRoute(String ville1, String ville2) throws IllegalArgumentException{
+		try {
+			if(ville1.equals(ville2)) {
+				throw new IllegalArgumentException("Vous ne pouvez pas entrer deux villes identiques");
+			}
+			int indice1 = rechercheIndiceVille(ville1);
+			int indice2 = rechercheIndiceVille(ville2);
+			this.graphe.ajoutLiaison(indice1, indice2);
+		}catch(VilleInexistanteException e1) {
+			e1.getMessage();
+		}
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'ajouter une borne de recharge dans une ville de notre agglomeration
+	 * 
+	 * @param nomVille le nom de la ville dans laquelle on veux ajouter une borne de recharge
+	 */	
+	public void ajoutZoneDeRecharge(String nomVille) {
+		try {
+			int i;
+			i = this.rechercheIndiceVille(nomVille);
+			if(!(enssembleDeVille.get(i).getPossedeUneBorne())) {
+				System.out.println("La ville " + nomVille + " possède désormai une borne !");
+				enssembleDeVille.get(i).setPossedeUneBorne(true);
+				this.incrementeScore();
+			}else {
+				System.out.println(nomVille+" possède dèja une borne de recharge");
+			}
+			System.out.println(listeVilleBornes());
+		} catch (VilleInexistanteException e) {
+			System.err.println("Ville Innexistante");
+		}
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Cette méthode réée une chaine de caractère avec les villes voisines de la ville passé en paramèrtre
+	 * 
+	 * @param v la ville pour laquelle on veux connaitre les villes voisines
+	 * @return un String avec les villes voisines de la villes v en paramètre
+	 */
+	public String villeVoisineSansBorne(Ville v) {
+		int k = v.getId();
+		StringBuilder sb = new StringBuilder("");
+		for(int i=0; i<this.enssembleDeVille.size(); i++) {
+			if(this.graphe.getMatrice()[k][i]==true) {
+				if(this.rechercheVille(i).getPossedeUneBorne()==false)
+					sb.append(this.rechercheVille(i)+", ");
+			}
+		}
+		return sb.toString();
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de retirer une borne de recharge dans une ville de notre agglomeration
+	 * 
+	 * @param nomVille le nom de la ville dans laquelle on veux retirer une borne de recharge
+	 * @throws VilleHorsAgglomerationException
+	 */	
+	public void retirerZoneDeRecharge(String nomVille){
+		Ville v = new Ville();
+		try {
+			int i = rechercheIndiceVille(nomVille);
+			v = this.enssembleDeVille.get(i);
+			if(!(v.getPossedeUneBorne())) {
+				System.out.println("la ville "+nomVille+" n'a pas de borne de recharcge");
+			}else {
+				if(this.possedUneBorneVoisine(v) && this.villeVoisineSansBorne(v).length()==0) {
+					this.enssembleDeVille.get(i).setPossedeUneBorne(false);
+					this.decrementeScore();
+					System.out.println("La borne à bien été retiré de la ville "+nomVille);
+				}else {
+					System.err.println("Vous ne pouvez pas retirer la borne de recharge de "+nomVille+" car "
+							+((this.villeVoisineSansBorne(v).length()<=3)?"la ville ":"les villes ")
+							+this.villeVoisineSansBorne(v)+((this.villeVoisineSansBorne(v).length()<=3)?"ne possèdera ":"ne possèderont ")+"pas de borne");
+				}
+			}
+			System.out.println(listeVilleBornes());
+		}catch(VilleInexistanteException e) {
+			System.err.println("Ville innexistante");
+		}
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de placer manuellement les bornes de racharge de notre agglomeration : 
+	 * entrer le nom des ville dans laquelle on veux les placer ou les retirer
+	 * 
+	 * @param sc un Scanner permettant de faire les entrées au clavier
+	 */	
+	public void menuPlacementDeBorneManuelle(Scanner sc){
+		int choix_option = 0;
+		String ville;
+		System.out.println("Placement des bornes de recharges");
+		do {
+			try {
+				System.out.println("1) ajouter une zone de recharge");
+				System.out.println("2) retirer une zone de recharge");
+				System.out.println("3) fin");
+				choix_option = sc.nextInt();
+				
+				switch(choix_option) {
+				case 1:
+					System.out.println("Dans quelle ville voulez vous ajouter une zone de recharge ? \n" 
+				+ "(entrez simplement la chaine de carachtère correspondant a la ville choisis) ");
+					ville = sc.next();
+					boolean existVille = false;
+					for(Ville v : this.enssembleDeVille) {
+						if(v.getNom().equals(ville.toUpperCase())) {
+							existVille = true;
+						}
+					}
+					if(existVille==false) {
+						System.err.println("Cette ville n'existe pas");
+					}
+					else {
+						this.ajoutZoneDeRecharge(ville.toUpperCase());
+					}
+					Agglomeration agglo2 = this;
+					agglo2.optimisationScoreAgglomeration();
+					if(this.listeVilleBornes().equals(agglo2.listeVilleBornes())) {
+						System.out.println("Bravo ! Vous avez trouvé une solution au problème, et peut être même la solution optimale !");
+					}
+					break;
+				case 2:
+						System.out.println();
+						System.out.println("Dans quelle ville voulez vous retirer une zone de recharge ? \n" 
+								+ "(entrez simplement la chaine de carachtère correspondant a la ville choisis) ");
+						ville = sc.next();
+						existVille = false;
+						for(Ville v : this.enssembleDeVille) {
+							if(v.getNom().equals(ville.toUpperCase())) {
+								existVille = true;
+							}
+						}
+						if(existVille==false) {
+							System.err.println("Cette ville n'existe pas");
+						}
+						else {
+							this.retirerZoneDeRecharge(ville.toUpperCase());
+						}
+						
+						Agglomeration agglo2 = this;
+						agglo2.optimisationScoreAgglomeration();
+						if(this.listeVilleBornes().equals(agglo2.listeVilleBornes())) {
+							System.out.println("Bravo ! Vous avez trouvé une solution au problème, et peut être même la solution optimale !");
+						}
+					break;
+				case 3:
+					System.out.println("Vous avez fini de placer vos bornes");
+					System.out.println(listeVilleBornes());
+					break;
+				default:
+					System.err.println("Entrez 1, 2 ou 3");
+					break;
+				}
+				
+			}catch(InputMismatchException e) {
+				System.err.println("Vous devez entrer un entrer un nombre entier");
+				sc.nextLine();
+			}
+				
+		}while(choix_option != 3);	
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Premet de savoir si une ville v passée en paramètre possède une borne à proximité d'elle,
+	 * c'est à dire dans une ville voisine.
+	 * 
+	 * @param v la ville pour la quelle nous voulons savoir si elle possède une borne à proximité 
+	 * @return true si elle en possède une, false sinon
+	 * @throws VilleHorsAgglomerationException
+	 */
+	public boolean possedUneBorneVoisine(Ville v) {
+		int i = v.getId();
+		for(int j=0; j<this.enssembleDeVille.size(); j++) {
+			if(this.graphe.getMatrice()[i][j]==true) {
+				if(this.rechercheVille(j).getPossedeUneBorne()==true) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Compte le nombre de ville dont la ville v passée en paramètre est lié par une route,
+	 * on les appel les villes voisines.
+	 * 
+	 * @param v la ville pour laqulle on veux coompter ses villes voisines
+	 * @return le nombre de ville voisines de v
+	 * @throws VilleHorsAgglomerationException
+	 */
+	public int nbVoisin(Ville v){
+		int i = v.getId();
+		int nbVoisin = 0;
+		for(int j=0; j<this.enssembleDeVille.size(); j++) {
+			if(this.graphe.getMatrice()[i][j]==true) {
+				nbVoisin += 1;
+			}
+		}
+		return nbVoisin;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de savoir combien de ville la ville entrée en paramettre pourrait satisfaire si on lui mettait une bornes.
+	 * C'est à dire, combien de ville pourrait prifiter de sa borne d'aprés les condition d'accessibilité.
+	 * 
+	 * @param v la ville pour la quelle on veut savoir le nombre de ville qu'elle peut satisfaire
+	 * @return nbVille le nombre de ville satisfaite par la borne de la ville v 
+	 * @throws VilleHorsAgglomerationException
+	 */
+	public int nbSatisfactionDeBorne(Ville v){
+		int i = v.getId();
+		int nbVille = (v.getPossedeUneBorne()==true)?0:1;//On inclu aussi la ville v 
+		for(int j=0; j<this.enssembleDeVille.size(); j++) {
+			if(this.graphe.getMatrice()[i][j]==true) {
+				for(Ville voisin : this.enssembleDeVille) { //On cherche la ville voisine qui correspond à l'id j
+					if(voisin.getId()==j) {
+						if(voisin.getPossedeUneBorne()==false && this.possedUneBorneVoisine(voisin)==false) {
+							nbVille +=1;
+						}
+					}
+				}
+			}
+		}
+		return nbVille;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de savoir si une agglomeration est linéaire. On appel lineaire une agglomeration dont 
+	 * toutes ces villes possède un nombre de ville voisines supérieur ou égale à 2.
+	 * 
+	 * @return true si l'agglomeartion est lineaire, false sinon.
+	 */
+	public boolean estLineaire() {
+		for(int i=0; i<this.enssembleDeVille.size(); i++) {
+			if(this.nbVoisin(this.enssembleDeVille.get(i))>2) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'avoir dans une liste toutes les villes de la sous agglomeration de racine v.
+	 * On appel sous agglomeartion de racine v l'agglomeration  
+	 * constitué seulement de la ville v et de ses voisins direct.
+	 * 
+	 * @param v la ville à partie de laquelle on va créer la sous agglomeration
+	 * @return la liste des villes de la sous agglomeration
+	 * @throws VilleHorsAgglomerationException
+	 */
+	public List<Ville> sousAgglomeration(Ville v){
+		List<Ville> sousAgglo = new ArrayList<Ville>();
+		sousAgglo.add(v);
+		int i = v.getId();
+		for(int j=0; j<this.enssembleDeVille.size(); j++) {
+			if(this.graphe.getMatrice()[i][j]==true) {
+				for(Ville voisin : this.enssembleDeVille) { //On cherche la ville voisine qui correspond à l'id j
+					if(voisin.getId()==j) {
+						sousAgglo.add(voisin);
+					}
+				}
+			}
+		}
+		return sousAgglo;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'optimiser le placement des bornes dans une agglomeration linéaire
+	 * pour que le nombre de bornes soit minimal
+	 * (on appel score le nombre de borne d'une agglomération)
+	 */
+	public void optimisationDeBorneLineaire() {
+		for(Ville v : this.enssembleDeVille) {
+			if(v.getPossedeUneBorne()==false && this.possedUneBorneVoisine(v)==false) {
+				v.setPossedeUneBorne(true);
+				this.incrementeScore();
+			}
+		}
+
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet d'optimiser le placement des bornes dans une agglomeration quelconque
+	 * pour que le nombre de bornes soit minimal
+	 * (on appel score le nombre de borne d'une agglomération)
+	 */
+	public void optimisationDeBorneQuelconque() {
+		//On cherche le nombre maximum de voisin que peut avoir une ville dans l'agglomeration
+		int maxNbVoisin = this.nbVoisin(this.enssembleDeVille.get(0));
+		for(int i=0; i<this.enssembleDeVille.size(); i++) {
+			if(this.nbVoisin(this.enssembleDeVille.get(i))>maxNbVoisin) {
+				maxNbVoisin = this.nbVoisin(this.enssembleDeVille.get(i));
+			}
+		}
+		//On compte le nombre de ville ayant le nombre maximum de voisin dans l'agglomération 
+		int nbVilleAvecMaxVoisin = 0;
+		for(Ville v : this.enssembleDeVille) {
+			if(this.nbVoisin(v)==maxNbVoisin) {
+				nbVilleAvecMaxVoisin+=1;
+			}
+		}
+		//Si moins de la moitier des villes de l'agglomération ont le nombre de voisin maximum de voisin...
+		if(nbVilleAvecMaxVoisin<this.enssembleDeVille.size()/2) {
+			//...on place une borne dans les villes ayant le nombre maximum de voisin dans l'agglomeration
+			for(Ville v : this.enssembleDeVille) {
+				if(this.nbVoisin(v)==maxNbVoisin) {
+					v.setPossedeUneBorne(true);
+					this.incrementeScore();
+				}
+			}
+		}
+		for(Ville v : this.enssembleDeVille) {
+			//On place maintenant les bornes dans les villes qui n'ont ni de borne ni de borne à proximité 
+			if(v.getPossedeUneBorne()==false && this.possedUneBorneVoisine(v)==false) {
+				/**
+				 * Si une ville n'a ni de borne ni de borne à proximité, on créé une sous agglomeration enraciné en cette ville.
+				 * On regarde le nombre de ville que chaque ville de la sous agglomération peut satisfaire si on lui place une borne.
+				 * Enfin on place une borne dans la ville qui pourra satisfaire le plus de ville possible avec sa borne.
+				 * Si plusieur ville ont la même capacité de satisfaire le maximum de ville avec leur borne, comparé aux 
+				 * autres ville de la sous agglomeration, on choisi une de ces ville au hasard
+				 * (ici on chois la premiére que l'on trouve quand on boucle sur la liste de la sous agglomeration)
+				 */
+				List<Ville> sousAgglo = new ArrayList<Ville>(this.sousAgglomeration(v));
+				int maxNbSatisfactionDeBorne = this.nbSatisfactionDeBorne(sousAgglo.get(0));
+				for(int i=0; i<sousAgglo.size(); i++) {
+					if(this.nbSatisfactionDeBorne(sousAgglo.get(i))>maxNbSatisfactionDeBorne) {
+						maxNbSatisfactionDeBorne = this.nbSatisfactionDeBorne(sousAgglo.get(i));
+					}
+				}
+				for(Ville villeSousAgglo : sousAgglo) {
+					if(this.nbSatisfactionDeBorne(villeSousAgglo)==maxNbSatisfactionDeBorne) {
+						villeSousAgglo.setPossedeUneBorne(true);
+						this.incrementeScore();
+					}
+				}
+			}
+		}	
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Application des deux méthodes d'optimisations pour optimiser le score de n'importe quelle agglomération
+	 */
+	public void optimisationScoreAgglomeration() {
+		for(Ville v : this.enssembleDeVille) {
+			v.setPossedeUneBorne(false);
+		}
+		this.setScore(0);
+		if(this.estLineaire()) {
+			this.optimisationDeBorneLineaire();
+		}
+		else {
+			this.optimisationDeBorneQuelconque();
+		}
+		System.out.println("Aprés résolution automatique "+this.listeVilleBornes());
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Permet de savoir si une agglomération respect les conditions d'accessibilité aux barnes de recharge
+	 * 
+	 * @return true si l'agglomération respecte les condition, false sinon
+	 */
+	public boolean respecteConditionAccessibilite() {
+		for(Ville v : this.enssembleDeVille) {
+			if(v.getPossedeUneBorne()==false && this.possedUneBorneVoisine(v)==false) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Menu permettant de suavegarder l'agglomération
+	 * 
+	 * @param sc le Scanner permettant à l'utilisateur d'entre son choix
+	 * @param fichier le chemin du fichier vers lequel l'agglomeration sera sauvegarder
+	 */
+	public void menuSauvegardeAgglomeration(Scanner sc, String fichier) {
+		int choixSave = 0;
+		do {
+			try {
+			//Sauvegarde du fichier dans un fichier par défaut ou dans un fichier choisi par l'utilisateur
+			System.out.println("1) Sauvegarder votre agglomération dans le fichier par défaut (sauvegardeAgglomeration.txt)");
+			System.out.println("2) Sauvegarder votre agglomération dans le fichier de votre choix");
+			System.out.println("3) Retour au menu");
+			String fichierSave;
+			choixSave = sc.nextInt();
+			switch(choixSave) {
+			case 1:
+				fichierSave = "sauvegardeAgglomeration.txt";
+				SauvegardeAgglomeration.sauvegardeAgglomeration(this, fichierSave);
+				break;
+			case 2:
+				System.out.println("Entrez le chemin vers le fichier que vous voulez");
+				fichierSave = sc.next();
+				File file = new File(fichierSave);
+		        if (!file.exists()) {
+		            System.err.println("Le fichier spécifié n'a pas été trouvé : " + fichier);
+		        }
+		        else {
+					SauvegardeAgglomeration.sauvegardeAgglomeration(this, fichierSave);
+		        }
+				break;
+			case 3:
+				break;
+			default:
+				System.err.println("Entrez 1, 2 ou 3");
+			}
+			}catch(InputMismatchException e) {
+				System.err.println("Vous devez entrer un entrer un nombre entier");
+				sc.nextLine();
+			}
+		}while(choixSave!=1 && choixSave!=2 && choixSave!=3);
+	}
+	
+	
+	
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder("");
+		for(Ville v : this.enssembleDeVille) {
+			sb.append("ville("+v.getNom()+")\n");
+			
+		}
+		for(int i=0; i<this.enssembleDeVille.size(); i++) {
+			for(int j=0; j<this.enssembleDeVille.size(); j++) {
+				if(this.graphe.getMatrice()[i][j]==true) {
+					Ville v1 = new Ville();
+					Ville v2 = new Ville();
+					for(Ville test : this.enssembleDeVille) {
+						if(test.getId()==i) {
+							v1.setNom(test.getNom());
+							v1.setId(test.getId());
+						}
+						if(test.getId()==j) {
+							v2.setNom(test.getNom());
+							v2.setId(test.getId());
+						}
+					}
+					if(sb.toString().contains("route("+v2.getNom()+","+v1.getNom()+")")==false) {
+						sb.append("route("+v1.getNom()+","+v2.getNom()+")\n");
+					}
+				}
+			}
+		}
+		for(Ville v : this.enssembleDeVille) {
+			if(v.getPossedeUneBorne()==true) {
+				sb.append("recharge("+v.getNom()+")\n");
+			}
+		}
+		return sb.toString();
+	}
+	
+}

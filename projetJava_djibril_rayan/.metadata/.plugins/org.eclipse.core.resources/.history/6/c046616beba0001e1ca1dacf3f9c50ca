@@ -1,0 +1,15 @@
+package up.mi.da.exceptions;
+
+public class FichierIncorrectException extends Exception{
+
+	private static final long serialVersionUID = 8358216770725173464L;
+		
+	public FichierIncorrectException(String message) {
+		super(message);
+	}
+	
+	public FichierIncorrectException() {
+		this("");
+	}
+
+}

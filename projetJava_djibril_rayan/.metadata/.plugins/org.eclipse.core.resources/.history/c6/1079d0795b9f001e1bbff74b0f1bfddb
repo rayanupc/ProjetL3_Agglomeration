@@ -1,0 +1,86 @@
+/**
+ * ParserAgglomeration.java
+ * 
+ * @author Rayan Almohaize, Djibril Dahoub
+ *
+ */
+package up.mi.da.agglomeration;
+
+import java.io.*;
+import java.util.*;
+
+import up.mi.da.exceptions.VilleHorsAgglomerationException;
+
+/**
+ *Permet l'automatisation du traitemant d'une agglomeration
+ */
+
+public class ParserAgglomeration {
+	
+	/**
+	 * Permet de lire un fichier texte pour en recuperer toutes les informations
+	 * et manipulation concernant une agglomeration
+	 * 
+	 * @param fichier le chemin vers le fichier utilisé
+	 * 
+	 * @return l'agglomeration décrite dans le fichier et les manipulation qui y sont faites
+	 */
+	public static Agglomeration parserAgglomeration(String fichier) {
+		String nomVille;
+		Graphe graphe = new Graphe();
+		Agglomeration agglo = new Agglomeration(graphe);
+		String ligne = null;
+		//Traitement du fichier
+		try(BufferedReader br = new BufferedReader(new FileReader(fichier))){
+			
+			while((ligne = br.readLine())!=null) {
+				//création des villes
+				if(ligne.startsWith("ville")) {
+			        StringTokenizer tokenizer = new StringTokenizer(ligne, "()");
+			        tokenizer.nextToken();	
+			        nomVille = tokenizer.nextToken();	
+			        agglo.ajoutVille(nomVille);
+			        graphe.setNbVille(agglo.getEnssembleDeVille().size());
+				}
+				//création des routes
+				if(ligne.startsWith("route")) {
+			        StringTokenizer tokenizer = new StringTokenizer(ligne, "(,)");
+			        tokenizer.nextToken();
+			        String ville1 = tokenizer.nextToken();
+			        String ville2 = tokenizer.nextToken();
+			        try {
+						agglo.ajoutRoute(ville1, ville2);
+					} catch (VilleHorsAgglomerationException e) {
+						e.getMessage();
+					}
+				}
+				//placement des bornes de recharge
+				if(ligne.startsWith("recharge")) {
+			        StringTokenizer tokenizer = new StringTokenizer(ligne, "()");
+			        tokenizer.nextToken();
+			        String ville = tokenizer.nextToken();
+			        for(Ville v : agglo.getEnssembleDeVille()) {
+			        	if(v.getNom().equals(ville)) {
+			        		v.setPossedeUneBorne(true);
+			        	}
+			        }
+				}
+				/*//retirer des bornes de recharges
+				if(ligne.startsWith("retire")){
+			        StringTokenizer tokenizer = new StringTokenizer(ligne, "()");
+			        tokenizer.nextToken();
+			        String ville = tokenizer.nextToken();
+			        agglo.retirerZoneDeRecharge(ville);
+				}*/
+			}
+		}catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+				
+		return agglo;
+		
+	}
+
+}
